@@ -16,8 +16,8 @@ EVAL_THRESHOLD = 0.70
 
 def setup_mlflow():
     """
-    Force MLflow to use a repo-local tracking folder.
-    This avoids old Mac absolute paths like /Users/... in GitHub Actions.
+    Force MLflow to use a safe local folder inside the GitHub Actions repo.
+    This prevents MLflow from using old Mac paths like /Users/...
     """
     os.makedirs("mlruns", exist_ok=True)
     mlflow.set_tracking_uri("file:./mlruns")
@@ -46,11 +46,9 @@ def train(
     os.makedirs("outputs", exist_ok=True)
     os.makedirs("models", exist_ok=True)
 
-    # TODO 1: Doc du lieu huan luyen va danh gia
     df_train = pd.read_csv(data_path)
     df_eval = pd.read_csv(eval_path)
 
-    # TODO 2: Tach dac trung (X) va nhan (y)
     X_train = df_train.drop(columns=["target"])
     y_train = df_train["target"]
 
@@ -58,29 +56,22 @@ def train(
     y_eval = df_eval["target"]
 
     with mlflow.start_run():
-        # TODO 3: Ghi nhan cac sieu tham so
         mlflow.log_params(params)
 
-        # TODO 4: Khoi tao va huan luyen RandomForestClassifier
         model = RandomForestClassifier(**params, random_state=42)
         model.fit(X_train, y_train)
 
-        # TODO 5: Du doan tren tap danh gia va tinh chi so
         preds = model.predict(X_eval)
         acc = accuracy_score(y_eval, preds)
         f1 = f1_score(y_eval, preds, average="weighted")
 
-        # TODO 6: Ghi nhan chi so vao MLflow
         mlflow.log_metric("accuracy", float(acc))
         mlflow.log_metric("f1_score", float(f1))
 
-        # TODO 7: Luu mo hinh ra file models/model.pkl
         joblib.dump(model, "models/model.pkl")
 
-        # TODO 8: Ghi model vao MLflow
         mlflow.sklearn.log_model(model, "model")
 
-        # TODO 9: Luu metrics ra file outputs/metrics.json
         with open("outputs/metrics.json", "w") as f:
             json.dump(
                 {
@@ -90,7 +81,6 @@ def train(
                 f,
             )
 
-        # TODO 10: In ket qua ra man hinh
         print(f"Accuracy: {acc:.4f} | F1: {f1:.4f}")
 
     return float(acc)
