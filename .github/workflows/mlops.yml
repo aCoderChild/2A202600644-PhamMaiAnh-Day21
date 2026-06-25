@@ -87,13 +87,16 @@ jobs:
       - name: Upload model to Cloud Storage
         run: |
           python - <<'EOF'
-          import os
           from google.cloud import storage
-          bucket_name = "${{ secrets.CLOUD_BUCKET }}"
+
+          bucket_name = "vinuni-mlops-bucket"
+
           client = storage.Client()
           bucket = client.bucket(bucket_name)
+
           blob = bucket.blob("models/latest/model.pkl")
           blob.upload_from_filename("models/model.pkl")
+
           print("Model uploaded to GCS.")
           EOF
 
