@@ -58,13 +58,19 @@ jobs:
 
       - name: Authenticate to Cloud Storage
         run: |
-          echo '${{ secrets.CLOUD_CREDENTIALS }}' > /tmp/sa-key.json
-          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa-key.json" >> $GITHUB_ENV
+          set -euo pipefail
+          cat > /tmp/sa-key.json <<'EOF'
+          ${{ secrets.CLOUD_CREDENTIALS }}
+          EOF
+          python -m json.tool /tmp/sa-key.json > /dev/null
+          chmod 600 /tmp/sa-key.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa-key.json" >> "$GITHUB_ENV"
 
       - name: Pull data with DVC
         run: |
-          dvc remote modify myremote credentialpath /tmp/sa-key.json
-          dvc pull data/train_phase1.csv data/eval.csv
+          set -euo pipefail
+          dvc remote modify --local myremote credentialpath /tmp/sa-key.json
+          dvc pull -v data/train_phase1.csv data/eval.csv
 
       - name: Train model
         run: python src/train.py
