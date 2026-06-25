@@ -88,16 +88,21 @@ jobs:
         run: |
           python - <<'EOF'
           from google.cloud import storage
+          from pathlib import Path
 
           bucket_name = "vinuni-mlops-bucket"
+          model_path = Path("models/model.pkl")
+
+          if not model_path.exists():
+              raise FileNotFoundError(f"Model file not found: {model_path}")
 
           client = storage.Client()
           bucket = client.bucket(bucket_name)
 
           blob = bucket.blob("models/latest/model.pkl")
-          blob.upload_from_filename("models/model.pkl")
+          blob.upload_from_filename(str(model_path))
 
-          print("Model uploaded to GCS.")
+          print(f"Model uploaded to gs://{bucket_name}/models/latest/model.pkl")
           EOF
 
       - name: Save metrics as artifact
